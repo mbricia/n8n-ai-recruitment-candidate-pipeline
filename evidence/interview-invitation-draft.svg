@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+<rect width="1200" height="700" fill="#f7f9fb"/>
+<rect x="35" y="35" width="1130" height="630" rx="22" fill="#fff" stroke="#d9e0e6" stroke-width="2"/>
+<rect x="35" y="35" width="1130" height="72" rx="22" fill="#eef3f8"/>
+<text x="70" y="82" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#17202a">Interview Invitation - Technical Support Associate</text>
+<text x="70" y="145" font-family="Arial,sans-serif" font-size="18" fill="#5f6b76">alex.rivera@example.com</text>
+<line x1="70" y1="165" x2="1130" y2="165" stroke="#d9e0e6"/>
+<text x="70" y="205" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Interview Invitation - Technical Support Associate</text>
+<line x1="70" y1="225" x2="1130" y2="225" stroke="#d9e0e6"/>
+<text x="70" y="275" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Hello Alex Rivera,</text>
+<text x="70" y="335" font-family="Arial,sans-serif" font-size="20" fill="#17202a">I would like to schedule an interview for the Technical Support Associate position on September</text>
+<text x="70" y="370" font-family="Arial,sans-serif" font-size="20" fill="#17202a">24, 2026 at 14:00. Please confirm your availability by September 19, 2026.</text>
+<text x="70" y="445" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Thank you,</text>
+<text x="70" y="480" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Sarah Johnson</text>
+<text x="70" y="630" font-family="Arial,sans-serif" font-size="15" fill="#5f6b76">AI-generated Gmail draft · recruiter review required before sending.</text>
+</svg>
