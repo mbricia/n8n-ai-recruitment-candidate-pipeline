@@ -1,0 +1,242 @@
+{
+  "name": "04 - Recruitment Technical Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "75c3e2e2-c473-4d7f-a420-859e046f3112",
+      "name": "01 - Capture Workflow Error"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "87509f2c-5bf5-4363-9bc1-9bbce4bcbad6",
+              "name": "error_id",
+              "value": "={{ 'TECH-' + ($json.execution?.id || $now.toMillis()) }}",
+              "type": "string"
+            },
+            {
+              "id": "667bf421-5cb9-4818-b1a3-7f919db574f2",
+              "name": "workflow",
+              "value": "={{ $json.workflow?.name || 'Unknown Workflow' }}",
+              "type": "string"
+            },
+            {
+              "id": "3acd9af2-e1f1-44ac-92c6-110027214d84",
+              "name": "error_type",
+              "value": "technical_error",
+              "type": "string"
+            },
+            {
+              "id": "be32236c-dd6f-4e1e-b615-51183ae03dd9",
+              "name": "application_id",
+              "value": "={{ '' }}",
+              "type": "string"
+            },
+            {
+              "id": "64dcc3ac-a23d-489f-8672-14ae25a9aae4",
+              "name": "node_name",
+              "value": "={{\n  $json.execution?.lastNodeExecuted\n  || ($json.trigger ? 'Trigger' : 'Unknown Node')\n}}",
+              "type": "string"
+            },
+            {
+              "id": "a069ddbf-2ecf-42e6-9db8-1e9b3aa96ccd",
+              "name": "error_message",
+              "value": "={{\n  $json.execution?.error?.message\n  || $json.trigger?.error?.message\n  || 'Technical workflow failure'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "dd79ce47-28bc-4ac1-864e-82cc83ca89e7",
+              "name": "execution_id",
+              "value": "={{ $json.execution?.id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "9a9b80d9-4274-4b12-aaa6-ceb674af45ee",
+              "name": "occurred_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "b5520a29-1e20-4ddb-aaac-56ccdcfdf262",
+              "name": "execution_url",
+              "value": "={{ $json.execution?.url || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c0f10aeb-939c-4e18-840b-f107e10d694f",
+      "name": "02 - Normalize Technical Error"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Error_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error_id": "={{ $json.error_id }}",
+            "workflow": "={{ $json.workflow }}",
+            "error_type": "={{ $json.error_type }}",
+            "application_id": "={{ $json.application_id }}",
+            "node_name": "={{ $json.node_name }}",
+            "error_message": "={{ $json.error_message }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "occurred_at": "={{ $json.occurred_at }}",
+            "execution_url": "={{ $json.execution_url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_id",
+              "displayName": "error_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_type",
+              "displayName": "error_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node_name",
+              "displayName": "node_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "occurred_at",
+              "displayName": "occurred_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_url",
+              "displayName": "execution_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7487990b-203a-48c9-bbeb-94f17d22d8c9",
+      "name": "03 - Log Technical Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 - Capture Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "02 - Normalize Technical Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Normalize Technical Error": {
+      "main": [
+        [
+          {
+            "node": "03 - Log Technical Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
