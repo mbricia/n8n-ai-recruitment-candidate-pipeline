@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+<rect width="1200" height="700" fill="#f7f9fb"/>
+<rect x="35" y="35" width="1130" height="630" rx="22" fill="#fff" stroke="#d9e0e6" stroke-width="2"/>
+<text x="75" y="95" font-family="Arial,sans-serif" font-size="32" font-weight="700" fill="#17202a">Application for Junior Web Developer</text>
+<rect x="75" y="125" width="44" height="44" rx="22" fill="#1495a8"/><text x="97" y="155" text-anchor="middle" font-family="Arial" font-size="22" fill="#fff">M</text>
+<text x="140" y="148" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#17202a">Maki Great</text>
+<text x="140" y="176" font-family="Arial,sans-serif" font-size="17" fill="#5f6b76">to Hiring Team</text>
+<text x="75" y="230" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Hello Hiring Team,</text>
+<text x="75" y="285" font-family="Arial,sans-serif" font-size="19" fill="#17202a">My name is Maria Santos and I would like to apply for the Junior Web Developer position at DemoTech Solutions.</text>
+<text x="75" y="335" font-family="Arial,sans-serif" font-size="19" fill="#17202a">I have experience with HTML, CSS, JavaScript, React, and building responsive web interfaces.</text>
+<text x="75" y="385" font-family="Arial,sans-serif" font-size="19" fill="#17202a">You can contact me at</text>
+<text x="252" y="385" font-family="Arial,sans-serif" font-size="19" fill="#1a73e8" text-decoration="underline">maria.santos@example.com</text>
+<text x="505" y="385" font-family="Arial,sans-serif" font-size="19" fill="#17202a">or 0918-555-0148.</text>
+<text x="75" y="445" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Thank you for your consideration.</text>
+<text x="75" y="510" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Best regards,</text>
+<text x="75" y="545" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Maria Santos</text>
+<text x="75" y="580" font-family="Arial,sans-serif" font-size="19" fill="#1a73e8" text-decoration="underline">maria.santos@example.com</text>
+<text x="75" y="630" font-family="Arial,sans-serif" font-size="15" fill="#5f6b76">Synthetic portfolio evidence reconstructed from the tested Gmail scenario.</text>
+</svg>
