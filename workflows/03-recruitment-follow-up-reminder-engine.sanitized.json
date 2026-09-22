@@ -1,0 +1,626 @@
+{
+  "name": "03 - Recruitment Follow-up & Reminder Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "4220d302-9661-41b2-9bd3-917257c57d6a",
+      "name": "01 - Daily Follow-up Check"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -192
+      ],
+      "id": "1b61b06d-4329-4df1-b7e6-c85b0bc526a5",
+      "name": "02 - Read Applications"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "be88d09d-fb0c-4885-b139-998fa30a43f6",
+              "leftValue": "={{ !['Rejected', 'Withdrawn', 'Hired', 'Closed'].includes($json.stage) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -192
+      ],
+      "id": "7ba90e96-5977-4b85-98c5-c36361e58096",
+      "name": "03 - Is Active Application?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7e0a4d45-4ec1-49c6-940b-f54d5c6d4429",
+              "leftValue": "={{   $json.next_action_date   &&   DateTime.fromISO($json.next_action_date).startOf('day')     <= $now.startOf('day') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -192
+      ],
+      "id": "074f400a-7ed9-4061-9ea9-96d7e4a7ea38",
+      "name": "04 - Follow-up Due?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9ad78a9d-874d-45e5-a972-df2c520bdaac",
+              "name": "application_id",
+              "value": "={{ $json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c0431e8f-7a6d-42d4-ab30-2e504ab1e2e1",
+              "name": "candidate_id",
+              "value": "={{ $json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "13909b91-19b4-4c4c-abc5-4bd125ec8639",
+              "name": "job_title",
+              "value": "={{ $json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "49a2a0ef-a39a-409c-ae3c-158f59e54495",
+              "name": "stage",
+              "value": "={{ $json.stage }}",
+              "type": "string"
+            },
+            {
+              "id": "ef31ec4a-e741-4e18-885f-97f190b8e096",
+              "name": "recruiter_name",
+              "value": "={{ $json.recruiter_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3dbf8494-a070-4d68-b4c9-e4bbb32a33de",
+              "name": "recruiter_email",
+              "value": "={{ $json.recruiter_email }}",
+              "type": "string"
+            },
+            {
+              "id": "d0cc0282-0afa-4b2b-87d6-b42a25aa8282",
+              "name": "next_action_date",
+              "value": "={{ $json.next_action_date }}",
+              "type": "string"
+            },
+            {
+              "id": "01afe533-8a3c-45e7-87a8-8a9f5b576c5d",
+              "name": "days_overdue",
+              "value": "={{\n  Math.max(\n    0,\n    Math.floor(\n      $now.startOf('day')\n        .diff(DateTime.fromISO($json.next_action_date).startOf('day'), 'days')\n        .days\n    )\n  )\n}}",
+              "type": "number"
+            },
+            {
+              "id": "ff60db29-bd7e-484e-acb0-182a34a4fe02",
+              "name": "reminder_subject",
+              "value": "={{\n  DateTime.fromISO($json.next_action_date).startOf('day')\n    .equals($now.startOf('day'))\n    ? `Recruitment Action Due Today - ${$json.job_title} (${$json.application_id})`\n    : `Overdue Recruitment Follow-up - ${$json.job_title} (${$json.application_id})`\n}}",
+              "type": "string"
+            },
+            {
+              "id": "61e00b51-acda-47e6-86a4-68a4c0a9ccc4",
+              "name": "reminder_message",
+              "value": "={{\n(() => {\n  const dueDate = DateTime.fromISO($json.next_action_date).startOf('day');\n  const today = $now.startOf('day');\n\n  const daysOverdue = Math.max(\n    0,\n    Math.floor(today.diff(dueDate, 'days').days)\n  );\n\n  const statusMessage = dueDate.equals(today)\n    ? 'This recruitment action is due today.'\n    : `This recruitment action is ${daysOverdue} day(s) overdue.`;\n\n  return `Hi ${$json.recruiter_name},\n\nA recruitment action requires your attention.\n\nApplication ID: ${$json.application_id}\nPosition: ${$json.job_title}\nCurrent Stage: ${$json.stage}\nNext Action Date: ${$json.next_action_date}\n\n${statusMessage}\n\nPlease review the application and update the recruitment pipeline when appropriate.\n\nThis is an automated internal reminder from the Recruitment Pipeline system.`;\n})()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "ae847d50-3836-4e10-9d42-1e969f70403d",
+              "name": "reminder_key",
+              "value": "={{ $json.application_id + '|' + $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "35bd38b8-db23-440b-a01a-01ccd8d32059",
+              "name": "reminder_status",
+              "value": "={{   DateTime.fromISO($json.next_action_date).startOf('day')     .equals($now.startOf('day'))     ? 'Due Today'     : 'Overdue' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "f6adf027-079c-49a3-8485-35e2cb2b105d",
+      "name": "05 - Prepare Follow-up Reminder"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json.reminder_subject }}",
+        "message": "={{ $json.reminder_message }}",
+        "options": {
+          "sendTo": "={{ $json.recruiter_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -192
+      ],
+      "id": "640012fb-049c-488a-a9dc-cb046b4933e0",
+      "name": "06 - Create Recruiter Reminder Draft"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Reminder_Log",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "reminder_key",
+              "lookupValue": "={{ $json.reminder_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -192
+      ],
+      "id": "bbaa31d6-b24d-4fbc-8c45-7d206d5ce715",
+      "name": "05A - Find Today's Reminder",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "032c7bf8-7167-430a-8a7c-665fa962e72b",
+              "leftValue": "={{ $json.reminder_key }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "3e969dd5-5349-49f1-960d-aedd70429141",
+      "name": "05B - Already Reminded Today?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb91340f-f5b6-4659-8b95-6867b15fd3f0",
+              "name": "application_id",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f7f29bef-6c9e-4e85-90a0-7f93d2afd177",
+              "name": "candidate_id",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "592025c5-ff01-474a-b1bf-8406be75f3da",
+              "name": "recruiter_email",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.recruiter_email }}",
+              "type": "string"
+            },
+            {
+              "id": "a91af348-780b-4bc5-a7f4-5a1c1a3df856",
+              "name": "next_action_date",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.next_action_date }}",
+              "type": "string"
+            },
+            {
+              "id": "ab586986-4d19-448f-884a-dcd15bc58e31",
+              "name": "days_overdue",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.days_overdue }}",
+              "type": "string"
+            },
+            {
+              "id": "695ed7d9-229d-49c8-bccc-f64a6172b026",
+              "name": "reminder_subject",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.reminder_subject }}",
+              "type": "string"
+            },
+            {
+              "id": "105a46b7-5a35-404f-959f-f21017558f23",
+              "name": "reminder_message",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.reminder_message }}",
+              "type": "string"
+            },
+            {
+              "id": "dabc4cf7-3de5-4e03-8ea0-4917e2d354f8",
+              "name": "reminder_key",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.reminder_key }}",
+              "type": "string"
+            },
+            {
+              "id": "04555b69-9358-4b6f-9825-e309f03f2a8b",
+              "name": "reminder_status",
+              "value": "={{ $('05 - Prepare Follow-up Reminder').item.json.reminder_status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -192
+      ],
+      "id": "07a00eea-7aa2-49ee-b847-ce2199f1c183",
+      "name": "05C - Restore Reminder Data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Reminder_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reminder_key": "={{ $('05C - Restore Reminder Data').item.json.reminder_key }}",
+            "application_id": "={{ $('05C - Restore Reminder Data').item.json.application_id }}",
+            "candidate_id": "={{ $('05C - Restore Reminder Data').item.json.candidate_id }}",
+            "recruiter_email": "={{ $('05C - Restore Reminder Data').item.json.recruiter_email }}",
+            "next_action_date": "={{ $('05C - Restore Reminder Data').item.json.next_action_date }}",
+            "days_overdue": "={{ $('05C - Restore Reminder Data').item.json.days_overdue }}",
+            "reminder_date": "={{ $now.toFormat('yyyy-MM-dd') }}",
+            "draft_status": "created",
+            "created_at": "={{ $now.toISO() }}",
+            "reminder_status": "={{ $('05C - Restore Reminder Data').item.json.reminder_status }}",
+            "reminder_subject": "={{ $('05C - Restore Reminder Data').item.json.reminder_subject }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "reminder_key",
+              "displayName": "reminder_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recruiter_email",
+              "displayName": "recruiter_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_action_date",
+              "displayName": "next_action_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "days_overdue",
+              "displayName": "days_overdue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reminder_date",
+              "displayName": "reminder_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "draft_status",
+              "displayName": "draft_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reminder_status",
+              "displayName": "reminder_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reminder_subject",
+              "displayName": "reminder_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2016,
+        -192
+      ],
+      "id": "9853b65a-edc0-4fe4-bdc1-1199dfafa467",
+      "name": "07 - Log Reminder Created"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 - Daily Follow-up Check": {
+      "main": [
+        [
+          {
+            "node": "02 - Read Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Read Applications": {
+      "main": [
+        [
+          {
+            "node": "03 - Is Active Application?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Is Active Application?": {
+      "main": [
+        [
+          {
+            "node": "04 - Follow-up Due?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Follow-up Due?": {
+      "main": [
+        [
+          {
+            "node": "05 - Prepare Follow-up Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Prepare Follow-up Reminder": {
+      "main": [
+        [
+          {
+            "node": "05A - Find Today's Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05A - Find Today's Reminder": {
+      "main": [
+        [
+          {
+            "node": "05B - Already Reminded Today?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05B - Already Reminded Today?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "05C - Restore Reminder Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Create Recruiter Reminder Draft": {
+      "main": [
+        [
+          {
+            "node": "07 - Log Reminder Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05C - Restore Reminder Data": {
+      "main": [
+        [
+          {
+            "node": "06 - Create Recruiter Reminder Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": []
+}
