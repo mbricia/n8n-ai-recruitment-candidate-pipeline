@@ -1,0 +1,1454 @@
+{
+  "name": "02 - Recruiter Action Center",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Recruiter Action Center",
+        "formDescription": "Update a candidate's recruitment stage and record the recruiter's next action.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "application_id",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "recruiter_action",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Shortlist"
+                  },
+                  {
+                    "option": "Schedule Interview"
+                  },
+                  {
+                    "option": "Assessment"
+                  },
+                  {
+                    "option": "Offer"
+                  },
+                  {
+                    "option": "Reject"
+                  },
+                  {
+                    "option": "Hire"
+                  },
+                  {
+                    "option": "Put On Hold"
+                  },
+                  {
+                    "option": "Close"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "recruiter_notes",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "interview_date",
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "next_action_date",
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "recruiter_name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "interview_time"
+            },
+            {
+              "fieldLabel": "recruiter_email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ffb2b9f4-f1d5-4063-8f01-fd396b8697a4",
+      "name": "01 - Recruiter Action Form"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb66f66e-74c7-4620-a2df-d71474881965",
+              "name": "application_id",
+              "value": "={{ ($json.application_id || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "cdeb6549-066a-4cd0-87a0-a3e0a3258b67",
+              "name": "recruiter_action",
+              "value": "={{ $json.recruiter_action }}",
+              "type": "string"
+            },
+            {
+              "id": "a228398a-195b-4f99-98f3-a2737ffee385",
+              "name": "recruiter_notes",
+              "value": "={{ ($json.recruiter_notes || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "0cc9c9ff-d8dd-4a40-9437-6d3df85e9b95",
+              "name": "recruiter_name",
+              "value": "={{ ($json.recruiter_name || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "62727d16-45bd-4c84-93d0-bf27f7157050",
+              "name": "next_action_date",
+              "value": "={{ $json.next_action_date || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "d9efcb71-ff35-424d-94d9-917d8c412aee",
+              "name": "interview_datetime",
+              "value": "={{   $json.interview_date     ? ($json.interview_time         ? $json.interview_date + 'T' + $json.interview_time + ':00'         : $json.interview_date)     : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "567e74f4-3438-42f7-9002-cca39b71a179",
+              "name": "target_stage",
+              "value": "={{ ({   'Shortlist': 'Shortlisted',   'Schedule Interview': 'Interview Scheduled',   'Assessment': 'Assessment',   'Offer': 'Offer',   'Reject': 'Rejected',   'Hire': 'Hired',   'Put On Hold': 'On Hold',   'Close': 'Closed' })[$json.recruiter_action] || 'Needs Review' }}",
+              "type": "string"
+            },
+            {
+              "id": "ba6ad8c8-5948-43d4-be6d-86e501f124c5",
+              "name": "recruiter_email",
+              "value": "={{ ($json.recruiter_email || '').trim().toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "47055109-f1c2-404d-b93e-552f56b15d07",
+      "name": "02 - Normalize Recruiter Action"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "application_id",
+              "lookupValue": "={{ $json.application_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "fd3234a3-18f3-4338-ac64-bd5146afb51e",
+      "name": "03 - Find Application",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "348cfa9c-b50a-4101-b2fd-16cee9d13c82",
+              "leftValue": "={{ $json.application_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2a06a651-ff12-477a-b8a8-e785310fd3bb",
+      "name": "04 - Application Found?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb9037be-c19e-48e5-ba15-93467da77bd1",
+              "name": "application_id",
+              "value": "={{ $json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "64b04bd5-bd36-4739-b9d9-a2eca69c9e99",
+              "name": "candidate_id",
+              "value": "={{ $json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a8bfc0a9-8396-4d8b-942a-0f422df15dd1",
+              "name": "current_stage",
+              "value": "={{ $json.stage }}",
+              "type": "string"
+            },
+            {
+              "id": "2057b321-dd13-45b6-a0d4-07bf09475edc",
+              "name": "target_stage",
+              "value": "={{ $('02 - Normalize Recruiter Action').item.json.target_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "8f8f7529-29d0-4452-bbcf-1428031a8e56",
+              "name": "recruiter_action",
+              "value": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_action }}",
+              "type": "string"
+            },
+            {
+              "id": "5fc3289c-4df2-477b-8dd7-6aee797115ed",
+              "name": "transition_allowed",
+              "value": "={{\n(() => {\n  const current = $json.stage;\n  const target = $('02 - Normalize Recruiter Action').item.json.target_stage;\n\n  const allowedTransitions = {\n    'New Applicant': [\n      'Shortlisted',\n      'Interview Scheduled',\n      'Assessment',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Shortlisted': [\n      'Interview Scheduled',\n      'Assessment',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Interview Scheduled': [\n      'Assessment',\n      'Offer',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Assessment': [\n      'Interview Scheduled',\n      'Offer',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Offer': [\n      'Hired',\n      'Closed'\n    ],\n    'On Hold': [\n      'Shortlisted',\n      'Interview Scheduled',\n      'Assessment',\n      'Offer',\n      'Rejected',\n      'Closed'\n    ]\n  };\n\n  return (allowedTransitions[current] || []).includes(target);\n})()\n}}",
+              "type": "boolean"
+            },
+            {
+              "id": "44b36afd-b638-476a-94cc-d30e53e9b15c",
+              "name": "validation_message",
+              "value": "={{\n(() => {\n  const current = $json.stage;\n  const target = $('02 - Normalize Recruiter Action').item.json.target_stage;\n  const action = $('02 - Normalize Recruiter Action').item.json.recruiter_action;\n\n  const allowedTransitions = {\n    'New Applicant': [\n      'Shortlisted',\n      'Interview Scheduled',\n      'Assessment',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Shortlisted': [\n      'Interview Scheduled',\n      'Assessment',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Interview Scheduled': [\n      'Assessment',\n      'Offer',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Assessment': [\n      'Interview Scheduled',\n      'Offer',\n      'Rejected',\n      'On Hold',\n      'Closed'\n    ],\n    'Offer': [\n      'Hired',\n      'Closed'\n    ],\n    'On Hold': [\n      'Shortlisted',\n      'Interview Scheduled',\n      'Assessment',\n      'Offer',\n      'Rejected',\n      'Closed'\n    ]\n  };\n\n  return (allowedTransitions[current] || []).includes(target)\n    ? `Stage transition allowed: ${current} → ${target}.`\n    : `Stage transition blocked: ${current} → ${target} via recruiter action \"${action}\".`;\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "ab16d493-1edd-413d-bd84-9a2b11fbd8c6",
+      "name": "05 - Validate Stage Transition"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8bf1bf04-bf44-468d-9c9e-76706977ac7c",
+              "leftValue": "={{ $json.transition_allowed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "f352e453-d925-407f-8409-affa767fc79f",
+      "name": "06 - Transition Allowed?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Recruiter_Action_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $json.application_id }}",
+            "candidate_id": "={{ $json.candidate_id }}",
+            "recruiter_name": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_name }}",
+            "recruiter_action": "={{ $json.recruiter_action }}",
+            "from_stage": "={{ $json.current_stage }}",
+            "target_stage": "={{ $json.target_stage }}",
+            "transition_allowed": "={{ $json.transition_allowed }}",
+            "recruiter_notes": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_notes }}",
+            "action_result": "blocked",
+            "action_timestamp": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_action",
+              "displayName": "recruiter_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "from_stage",
+              "displayName": "from_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "target_stage",
+              "displayName": "target_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transition_allowed",
+              "displayName": "transition_allowed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_notes",
+              "displayName": "recruiter_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_result",
+              "displayName": "action_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_timestamp",
+              "displayName": "action_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "e6c68ebc-4159-4a1c-81f6-abd01154c7ea",
+      "name": "07 - Log Blocked Action"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "afee84eb-1faf-49b4-a2a2-1b33fa48669d",
+              "name": "application_id",
+              "value": "={{ $json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "32708abc-fb06-407f-8a70-c18880495bce",
+              "name": "candidate_id",
+              "value": "={{ $json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0e0b8c01-a053-48b9-a55e-8b58570284ba",
+              "name": "from_stage",
+              "value": "={{ $json.current_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "26ca93bb-c989-427d-a24c-7885a7206d52",
+              "name": "new_stage",
+              "value": "={{ $json.target_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "7509c565-559e-443b-b9ea-8d48e6335601",
+              "name": "recruiter_action",
+              "value": "={{ $json.recruiter_action }}",
+              "type": "string"
+            },
+            {
+              "id": "7db048d5-4d11-4653-824d-12d8556eaf83",
+              "name": "recruiter_name",
+              "value": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_name }}",
+              "type": "string"
+            },
+            {
+              "id": "33e1438a-dcf7-4c61-925a-268874d5fecd",
+              "name": "recruiter_notes",
+              "value": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_notes }}",
+              "type": "string"
+            },
+            {
+              "id": "b707efaa-9c9a-47cb-b638-1bcf915e2825",
+              "name": "new_next_action_date",
+              "value": "={{   $('02 - Normalize Recruiter Action').item.json.next_action_date   || $('03 - Find Application').item.json.next_action_date   || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "6210980d-a823-4027-972e-8b8b8c58003f",
+              "name": "new_interview_date",
+              "value": "={{   $('02 - Normalize Recruiter Action').item.json.interview_datetime   || $('03 - Find Application').item.json.interview_date   || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "8e4bf817-7a3b-467b-8767-577c02fb5c01",
+              "name": "recruiter_email",
+              "value": "={{ $('02 - Normalize Recruiter Action').item.json.recruiter_email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "b7106992-728d-45d6-bc4a-28647f49b812",
+      "name": "08 - Prepare Recruiter Update"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $json.application_id }}",
+            "stage": "={{ $json.new_stage }}",
+            "next_action_date": "={{ $json.new_next_action_date }}",
+            "interview_date": "={{ $json.new_interview_date }}",
+            "recruiter_name": "={{ $json.recruiter_name }}",
+            "last_activity_date": "={{ $now.toISO() }}",
+            "notes": "={{ $json.recruiter_notes }}",
+            "last_updated": "={{ $now.toISO() }}",
+            "recruiter_email": "={{ $json.recruiter_email }}"
+          },
+          "matchingColumns": [
+            "application_id"
+          ],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_date",
+              "displayName": "application_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_activity_date",
+              "displayName": "last_activity_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action_date",
+              "displayName": "next_action_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_email",
+              "displayName": "recruiter_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_application_id",
+              "displayName": "external_application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_review",
+              "displayName": "needs_review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        -192
+      ],
+      "id": "1e730883-fd3b-4988-af90-98efdd35c398",
+      "name": "09 - Update Application"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Recruiter_Action_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $('08 - Prepare Recruiter Update').item.json.application_id }}",
+            "candidate_id": "={{ $('08 - Prepare Recruiter Update').item.json.candidate_id }}",
+            "recruiter_name": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_name }}",
+            "recruiter_action": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_action }}",
+            "from_stage": "={{ $('08 - Prepare Recruiter Update').item.json.from_stage }}",
+            "target_stage": "={{ $('08 - Prepare Recruiter Update').item.json.new_stage }}",
+            "transition_allowed": "true",
+            "recruiter_notes": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_notes }}",
+            "action_result": "success",
+            "action_timestamp": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_action",
+              "displayName": "recruiter_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "from_stage",
+              "displayName": "from_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "target_stage",
+              "displayName": "target_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transition_allowed",
+              "displayName": "transition_allowed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_notes",
+              "displayName": "recruiter_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_result",
+              "displayName": "action_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_timestamp",
+              "displayName": "action_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        -192
+      ],
+      "id": "cba078f9-cdac-4154-8918-5aa9a137bdcf",
+      "name": "10 - Log Successful Action"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "daee6ece-d025-4409-8256-32dd4c7d5ab3",
+              "leftValue": "={{ ['Schedule Interview', 'Assessment', 'Offer', 'Reject'].includes($json.recruiter_action) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        -192
+      ],
+      "id": "71df132c-c2d6-4faa-8383-a234d3ae5c20",
+      "name": "11 - Email Draft Needed?"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Candidates",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "candidate_id",
+              "lookupValue": "={{ $json.candidate_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2240,
+        -288
+      ],
+      "id": "900cb41a-36f8-4d82-9d36-4bab1151286a",
+      "name": "12 - Find Candidate Contact",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13e3cbfa-99c9-4ac0-b0e8-4176b27be901",
+              "name": "candidate_name",
+              "value": "={{ $json.full_name }}",
+              "type": "string"
+            },
+            {
+              "id": "15bf57b7-0650-4ec0-8613-c4fc9cee33cd",
+              "name": "candidate_email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "05718f05-8dd9-42b7-8dc4-8bf51759bc0c",
+              "name": "application_id",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "caf423a4-b950-4ea2-bb6d-4c715e966b89",
+              "name": "job_title",
+              "value": "={{ $('03 - Find Application').item.json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "a3b4bfc5-491a-4f82-9bde-f11927d5657d",
+              "name": "recruiter_action",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_action }}",
+              "type": "string"
+            },
+            {
+              "id": "815cc865-590e-4df2-a109-ea830f4000a6",
+              "name": "recruiter_name",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_name }}",
+              "type": "string"
+            },
+            {
+              "id": "e4be9830-2054-4925-89d2-aa1759971be1",
+              "name": "recruiter_notes",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.recruiter_notes }}",
+              "type": "string"
+            },
+            {
+              "id": "1dae283e-0fc8-4e3a-a885-161c6cc3029b",
+              "name": "interview_datetime",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.new_interview_date }}",
+              "type": "string"
+            },
+            {
+              "id": "1a843822-b232-46f8-91aa-62955280d112",
+              "name": "next_action_date",
+              "value": "={{ $('08 - Prepare Recruiter Update').item.json.new_next_action_date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2464,
+        -288
+      ],
+      "id": "66a8211d-8432-47a6-b2b7-ac22c2a93b59",
+      "name": "13 - Prepare Candidate Communication"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n{{\n`Write a professional recruitment email draft based only on the information below.\n\nThis email will be reviewed by a recruiter before sending.\n\nRules:\n- Do not invent details.\n- Keep the tone professional, concise, and friendly.\n- Address the candidate by name.\n- Mention the job title.\n- Follow the recruiter action exactly.\n- If an interview date/time is provided, include it clearly.\n- Do not claim that the email has already been sent.\n- Do not add information that is not provided.\n- Do not include a subject line.\n- Do not promise future actions, additional details, links, or instructions unless they are explicitly provided in the recruiter notes or input data.\n- Return only the email body.\n- Sign the email using the recruiter's name.\n- Never promise future actions, follow-up messages, additional interview details, links, documents, or instructions unless they are explicitly provided in the recruiter notes or input data.\n- If information is not provided, simply omit it instead of assuming what will happen next.\n\nCandidate Name: ${$json.candidate_name}\nJob Title: ${$json.job_title}\nRecruiter Action: ${$json.recruiter_action}\nRecruiter Notes: ${$json.recruiter_notes}\nInterview Date/Time: ${$json.interview_datetime || 'Not provided'}\nNext Action Date: ${$json.next_action_date || 'Not provided'}\nRecruiter Name: ${$json.recruiter_name}`\n}}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2688,
+        -288
+      ],
+      "id": "3922055c-d62a-40de-a492-ad4c9a506b3b",
+      "name": "14 - Generate Candidate Email Draft"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2624,
+        -80
+      ],
+      "id": "261b089c-4f24-45e3-9a78-66e81143453c",
+      "name": "14A - Email Draft Model"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ ({   'Schedule Interview': `Interview Invitation - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Assessment': `Assessment - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Offer': `Offer - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Reject': `Update on Your Application - ${$('13 - Prepare Candidate Communication').item.json.job_title}` })[$('13 - Prepare Candidate Communication').item.json.recruiter_action] || `Application Update - ${$('13 - Prepare Candidate Communication').item.json.job_title}` }}",
+        "message": "={{ $json.text }}",
+        "options": {
+          "sendTo": "={{ $('13 - Prepare Candidate Communication').item.json.candidate_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3056,
+        -288
+      ],
+      "id": "f522a809-dfff-40cc-a55c-0e1f32ef4ec1",
+      "name": "15 - Create Candidate Email Draft"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Communication_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $('13 - Prepare Candidate Communication').item.json.application_id }}",
+            "candidate_id": "={{ $('08 - Prepare Recruiter Update').item.json.candidate_id }}",
+            "candidate_email": "={{ $('13 - Prepare Candidate Communication').item.json.candidate_email }}",
+            "recruiter_action": "={{ $('13 - Prepare Candidate Communication').item.json.recruiter_action }}",
+            "subject": "={{ ({   'Schedule Interview': `Interview Invitation - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Assessment': `Assessment - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Offer': `Offer - ${$('13 - Prepare Candidate Communication').item.json.job_title}`,   'Reject': `Update on Your Application - ${$('13 - Prepare Candidate Communication').item.json.job_title}` })[$('13 - Prepare Candidate Communication').item.json.recruiter_action] || `Application Update - ${$('13 - Prepare Candidate Communication').item.json.job_title}` }}",
+            "draft_status": "created",
+            "draft_created_at": "={{ $now.toISO() }}",
+            "recruiter_name": "={{ $('13 - Prepare Candidate Communication').item.json.recruiter_name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_email",
+              "displayName": "candidate_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_action",
+              "displayName": "recruiter_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "draft_status",
+              "displayName": "draft_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "draft_created_at",
+              "displayName": "draft_created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3280,
+        -288
+      ],
+      "id": "dc079234-69bb-4271-952f-840ae27fbac3",
+      "name": "16 - Log Email Draft Created"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Error_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error_id": "={{ 'ERR-' + $execution.id + '-' + $itemIndex }}",
+            "workflow": "Recruiter Action Center",
+            "error_type": "validation_error",
+            "application_id": "={{ $('02 - Normalize Recruiter Action').item.json.application_id }}",
+            "node_name": "04 - Application Found?",
+            "error_message": "={{ `Application ID \"${$('02 - Normalize Recruiter Action').item.json.application_id}\" was not found. Recruiter action was stopped.` }}",
+            "execution_id": "={{ $execution.id }}",
+            "occurred_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_id",
+              "displayName": "error_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_type",
+              "displayName": "error_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node_name",
+              "displayName": "node_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "occurred_at",
+              "displayName": "occurred_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        96
+      ],
+      "id": "0fe74f99-d210-419b-83d6-e6326f343ab0",
+      "name": "04A - Log Invalid Application"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 - Recruiter Action Form": {
+      "main": [
+        [
+          {
+            "node": "02 - Normalize Recruiter Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Normalize Recruiter Action": {
+      "main": [
+        [
+          {
+            "node": "03 - Find Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Find Application": {
+      "main": [
+        [
+          {
+            "node": "04 - Application Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Application Found?": {
+      "main": [
+        [
+          {
+            "node": "05 - Validate Stage Transition",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04A - Log Invalid Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Validate Stage Transition": {
+      "main": [
+        [
+          {
+            "node": "06 - Transition Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Transition Allowed?": {
+      "main": [
+        [
+          {
+            "node": "08 - Prepare Recruiter Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "07 - Log Blocked Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 - Prepare Recruiter Update": {
+      "main": [
+        [
+          {
+            "node": "09 - Update Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Update Application": {
+      "main": [
+        [
+          {
+            "node": "10 - Log Successful Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Log Successful Action": {
+      "main": [
+        [
+          {
+            "node": "11 - Email Draft Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Email Draft Needed?": {
+      "main": [
+        [
+          {
+            "node": "12 - Find Candidate Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Find Candidate Contact": {
+      "main": [
+        [
+          {
+            "node": "13 - Prepare Candidate Communication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Prepare Candidate Communication": {
+      "main": [
+        [
+          {
+            "node": "14 - Generate Candidate Email Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14A - Email Draft Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "14 - Generate Candidate Email Draft",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Generate Candidate Email Draft": {
+      "main": [
+        [
+          {
+            "node": "15 - Create Candidate Email Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Create Candidate Email Draft": {
+      "main": [
+        [
+          {
+            "node": "16 - Log Email Draft Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": []
+}
