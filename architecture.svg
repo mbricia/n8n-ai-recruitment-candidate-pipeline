@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#070a0f"/>
+<g font-family="Inter,Arial,sans-serif" fill="#eef4f7">
+  <text x="80" y="90" font-size="42" font-weight="700">AI Recruitment &amp; Candidate Pipeline Automation</text>
+  <text x="80" y="132" font-size="20" fill="#8ea2ad">Multi-workflow n8n recruitment operations architecture</text>
+</g>
+<g font-family="Inter,Arial,sans-serif">
+  <rect x="80" y="190" width="1440" height="125" rx="20" fill="#101720" stroke="#2c3945"/>
+  <text x="110" y="225" fill="#67e8a5" font-size="18" font-weight="700">01 · CANDIDATE EMAIL PROCESSOR</text>
+  <text x="110" y="270" fill="#eef4f7" font-size="23">Gmail → Normalize → Email Dedup → Recruitment Gate → AI Extract → Candidate Dedup → Application Create/Update → Email Log</text>
+
+  <rect x="80" y="345" width="1440" height="125" rx="20" fill="#101720" stroke="#2c3945"/>
+  <text x="110" y="380" fill="#7dd3fc" font-size="18" font-weight="700">02 · RECRUITER ACTION CENTER</text>
+  <text x="110" y="425" fill="#eef4f7" font-size="23">Form → Find Application → Validate Stage Transition → Update → Audit Log → Optional AI Draft → Gmail Draft</text>
+
+  <rect x="80" y="500" width="1440" height="125" rx="20" fill="#101720" stroke="#2c3945"/>
+  <text x="110" y="535" fill="#fbbf24" font-size="18" font-weight="700">03 · FOLLOW-UP &amp; REMINDER ENGINE</text>
+  <text x="110" y="580" fill="#eef4f7" font-size="23">Schedule → Read Active Applications → Due/Overdue Check → Reminder Dedup → Gmail Draft → Reminder Log</text>
+
+  <rect x="80" y="655" width="1440" height="125" rx="20" fill="#101720" stroke="#2c3945"/>
+  <text x="110" y="690" fill="#fda4af" font-size="18" font-weight="700">04 · TECHNICAL ERROR HANDLER</text>
+  <text x="110" y="735" fill="#eef4f7" font-size="23">Error Trigger → Normalize Failure → Error Log</text>
+
+  <rect x="470" y="820" width="660" height="55" rx="16" fill="#111c24" stroke="#3c4c58"/>
+  <text x="800" y="854" text-anchor="middle" fill="#b6c6cf" font-size="19">Shared datastore: Google Sheets · Candidates · Applications · Logs</text>
+</g>
+</svg>
