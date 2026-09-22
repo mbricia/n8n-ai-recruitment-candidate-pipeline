@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+<rect width="1200" height="760" fill="#f7f9fb"/>
+<rect x="35" y="35" width="1130" height="690" rx="22" fill="#fff" stroke="#d9e0e6" stroke-width="2"/>
+<rect x="35" y="35" width="1130" height="72" rx="22" fill="#eef3f8"/>
+<text x="70" y="82" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#17202a">Overdue Recruitment Follow-up - Technical Support Associate (APP-499-0)</text>
+<text x="70" y="145" font-family="Arial,sans-serif" font-size="18" fill="#5f6b76">sarah.johnson@demotech.example</text>
+<line x1="70" y1="165" x2="1130" y2="165" stroke="#d9e0e6"/>
+<text x="70" y="215" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Hi Sarah Johnson,</text>
+<text x="70" y="270" font-family="Arial,sans-serif" font-size="20" fill="#17202a">A recruitment action requires your attention.</text>
+<text x="70" y="325" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Application ID: APP-499-0</text>
+<text x="70" y="360" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Position: Technical Support Associate</text>
+<text x="70" y="395" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Current Stage: Interview Scheduled</text>
+<text x="70" y="430" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Next Action Date: 2026-09-19</text>
+<text x="70" y="500" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#b45309">This recruitment action is 2 day(s) overdue.</text>
+<text x="70" y="560" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Please review the application and update the recruitment pipeline when appropriate.</text>
+<text x="70" y="620" font-family="Arial,sans-serif" font-size="20" fill="#17202a">This is an automated internal reminder from the Recruitment Pipeline system.</text>
+<text x="70" y="690" font-family="Arial,sans-serif" font-size="15" fill="#5f6b76">Scheduled reminder draft · same-day duplicate protection enabled.</text>
+</svg>
