@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+<rect width="1200" height="700" fill="#f7f9fb"/>
+<rect x="35" y="35" width="1130" height="630" rx="22" fill="#fff" stroke="#d9e0e6" stroke-width="2"/>
+<rect x="35" y="35" width="1130" height="72" rx="22" fill="#eef3f8"/>
+<text x="70" y="82" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#17202a">Offer - Junior Web Developer</text>
+<text x="70" y="145" font-family="Arial,sans-serif" font-size="18" fill="#5f6b76">maria.santos@example.com</text>
+<line x1="70" y1="165" x2="1130" y2="165" stroke="#d9e0e6"/>
+<text x="70" y="205" font-family="Arial,sans-serif" font-size="19" fill="#17202a">Offer - Junior Web Developer</text>
+<line x1="70" y1="225" x2="1130" y2="225" stroke="#d9e0e6"/>
+<text x="70" y="275" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Dear Maria Santos,</text>
+<text x="70" y="335" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Congratulations. I am pleased to offer you the position of Junior Web Developer. You successfully</text>
+<text x="70" y="370" font-family="Arial,sans-serif" font-size="20" fill="#17202a">completed the interview process, and we would like to extend this offer to you.</text>
+<text x="70" y="430" font-family="Arial,sans-serif" font-size="20" fill="#17202a">If you have any questions, please let me know.</text>
+<text x="70" y="500" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Sincerely,</text>
+<text x="70" y="535" font-family="Arial,sans-serif" font-size="20" fill="#17202a">Sarah Johnson</text>
+<text x="70" y="630" font-family="Arial,sans-serif" font-size="15" fill="#5f6b76">AI-generated Gmail draft · recruiter review required before sending.</text>
+</svg>
