@@ -1,0 +1,1538 @@
+{
+  "name": "01 - Candidate Email Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "73a5a77d-2b36-4f58-9053-639664db88a1",
+      "name": "01 - New Candidate Email"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8ac995f0-0875-4e86-a14c-eb0bf622ae8a",
+              "name": "email_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "3b3fe19c-658e-479f-b6d4-7df10bbe1f6e",
+              "name": "thread_id",
+              "value": "={{ $json.threadId }}",
+              "type": "string"
+            },
+            {
+              "id": "a1fad1be-85f2-4021-9de9-79d6f6a7ea3c",
+              "name": "sender",
+              "value": "={{ $json.from.text }}",
+              "type": "string"
+            },
+            {
+              "id": "c5d5d977-4810-4c22-a138-835607c1eef6",
+              "name": "recipient",
+              "value": "={{ $json.to.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5fc567b1-2554-4a1c-b237-bc0e6a4504ae",
+              "name": "email_body",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "82da0514-d624-4f27-b328-5957ac171b5f",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        -192
+      ],
+      "id": "ca95e62f-20b7-4941-b35a-f286bda52dc0",
+      "name": "03 - Normalize Candidate Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c427b07f-9b56-49b0-aa9e-ad48866eb868",
+              "leftValue": "={{\n  /\\b(application|applicant|candidate|resume|curriculum vitae|interview|assessment|offer|rejection|rejected|decline|withdrawal|withdraw|shortlisted|screening|hiring)\\b/i\n    .test(($json.subject || '') + ' ' + ($json.email_body || ''))\n}}",
+              "rightValue": "application",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "579d3d3b-80a3-4542-878d-4d280c4e7302",
+      "name": "04 - Check Recruitment Email"
+    },
+    {
+      "parameters": {
+        "text": "={{\n`You are interpreting an incoming email for a company's recruitment pipeline.\n\nRules:\n- Determine whether this email belongs to an actual candidate/application being managed by the hiring company.\n- Do NOT treat the email recipient, recruiter, HR staff, or hiring manager as the candidate.\n- Candidate information must come from the actual applicant/candidate mentioned or sending the email.\n- Job alerts, expired job notifications, job-board updates sent to a job seeker, marketing emails, and general recruitment content are NOT candidate pipeline emails.\n- Do not invent facts that are not explicitly supported by the email.\n- If the candidate identity is unknown or this is not a candidate pipeline email, return null for candidate_name and candidate_email.\n- If an interview date and time are explicitly provided, extract them as an ISO 8601 datetime.\n- If no interview date and time are explicitly stated, return null for interview_date.\n- Use \"new_application\" only for a new candidate application.\n- Use \"candidate_follow_up\" when the candidate is following up on an existing application without changing the recruitment stage.\n- Use \"interview_related\" for interview invitations, interview confirmations, interview rescheduling, or other interview-specific communication.\n- Use \"assessment_related\" for tests, technical assessments, exams, or take-home tasks.\n- Use \"offer_related\" for job offers or offer-related communication.\n- Use \"withdrawal\" when the candidate withdraws their application.\n- Use \"other_candidate_related\" for relevant candidate communication that does not fit the categories above.\n- Use \"not_candidate_related\" when the email is not part of an actual candidate pipeline.\n- Use \"rejection\" when the hiring company informs the candidate that they will not proceed with the application or that the candidate was not selected.\n\nSUBJECT:\n${$json.subject}\n\nFROM:\n${$json.sender}\n\nEMAIL:\n${$json.email_body}`\n}}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"is_candidate_pipeline_email\": {\n      \"type\": \"boolean\",\n      \"description\": \"True only if this email is directly related to an actual candidate or job application being managed by the hiring company. False for job alerts, job-board notifications sent to job seekers, marketing, expired listing notices, and unrelated recruitment content.\"\n    },\n    \"email_type\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"new_application\",\n        \"candidate_follow_up\",\n        \"interview_related\",\n        \"assessment_related\",\n        \"offer_related\",\n        \"rejection\",\n        \"withdrawal\",\n        \"other_candidate_related\",\n        \"not_candidate_related\"\n      ]\n    },\n    \"candidate_name\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"description\": \"Full name of the actual candidate or applicant. Return null if unknown or if the email is not candidate-related.\"\n    },\n    \"candidate_email\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"description\": \"Email address of the actual candidate or applicant. Return null if unknown or if the email is not candidate-related.\"\n    },\n    \"job_title\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"description\": \"The position the candidate applied for or is being considered for. Return null if it cannot be determined.\"\n    },\n    \"interview_date\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"description\": \"Interview date and time in ISO 8601 format when explicitly stated in the email. Return null if no interview schedule is provided.\"\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"A concise factual summary of the email and any important candidate or recruitment details.\"\n    }\n  },\n  \"required\": [\n    \"is_candidate_pipeline_email\",\n    \"email_type\",\n    \"candidate_name\",\n    \"candidate_email\",\n    \"job_title\",\n    \"interview_date\",\n    \"summary\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -192
+      ],
+      "id": "b9aaac5b-92cb-46f7-a0a5-5e6d9c3000e2",
+      "name": "05 - Interpret Recruitment Email"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        48
+      ],
+      "id": "2cc692cd-f110-444c-a600-34e036aaf996",
+      "name": "05A - AI Extraction Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7b02cf86-74b5-4008-b324-811d2d2a77fe",
+              "leftValue": "={{ $json.output.is_candidate_pipeline_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        -192
+      ],
+      "id": "6e786e93-a9b9-42b0-be1b-e0bf32699f09",
+      "name": "06 - Route Candidate Pipeline Email"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "91fa1633-32a4-40c4-86cd-888eaaedd78b",
+              "name": "candidate_name",
+              "value": "={{ $json.output.candidate_name }}",
+              "type": "string"
+            },
+            {
+              "id": "23799ea4-c5a5-4978-b366-50bf79e6d44e",
+              "name": "candidate_email",
+              "value": "={{ ($json.output.candidate_email || '').trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "68158cce-2dc9-40e2-b217-08212e45b872",
+              "name": "job_title",
+              "value": "={{ $json.output.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "282537aa-4cf0-4ec0-83ba-65b4540d57c0",
+              "name": "email_type",
+              "value": "={{ $json.output.email_type }}",
+              "type": "string"
+            },
+            {
+              "id": "f2766791-7240-4745-b964-0cf0763f13ba",
+              "name": "summary",
+              "value": "={{ $json.output.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "332ff6cc-f1da-4b70-a56b-78de4fb03f3b",
+              "name": "email_id",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.email_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9012840a-fee5-4c66-9559-c0eed4b68b2b",
+              "name": "thread_id",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.thread_id }}",
+              "type": "string"
+            },
+            {
+              "id": "04c31a4e-c521-478d-8a82-0690400e20a5",
+              "name": "sender",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "b4c1810e-eace-4a42-ba6e-4e425d9fbb9b",
+              "name": "subject",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "884cab5f-28da-4055-b457-2392db175fc6",
+              "name": "interview_date",
+              "value": "={{ $json.output.interview_date ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2144,
+        -192
+      ],
+      "id": "992640b1-4a0c-48be-95ea-8a462abd1bc2",
+      "name": "07 - Prepare Candidate Record"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Candidates",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.candidate_email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        -192
+      ],
+      "id": "b8a4f1b2-e6f9-4ad3-96bd-fd3b71f52a7b",
+      "name": "08 - Find Candidate by Email",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "85b67c59-3fe4-4c08-9270-b946cf5b40ff",
+              "leftValue": "={{ $json.candidate_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2592,
+        -192
+      ],
+      "id": "5abf95a4-03bf-48b0-a816-9bfd9f14b288",
+      "name": "09 - Candidate Exists?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Candidates",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "candidate_id": "={{ 'CAND-' + $execution.id + '-' + $itemIndex }}",
+            "full_name": "={{ $('07 - Prepare Candidate Record').item.json.candidate_name }}",
+            "email": "={{ $('07 - Prepare Candidate Record').item.json.candidate_email }}",
+            "source": "Email",
+            "date_created": "={{ $now.toISO() }}",
+            "last_updated": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_created",
+              "displayName": "date_created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2816,
+        -112
+      ],
+      "id": "df3acc66-fd12-4dd5-b089-01ed2dfc7603",
+      "name": "10 - Create New Candidate"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "candidate_id",
+              "lookupValue": "={{ $json.candidate_id }}"
+            },
+            {
+              "lookupColumn": "job_title",
+              "lookupValue": "={{ $json.job_title }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3264,
+        -192
+      ],
+      "id": "f2b9f8d2-08da-4ea8-aa80-e77de615aba4",
+      "name": "11 - Find Existing Application",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -192
+      ],
+      "id": "6bb62d0a-ea4c-4fe3-8b24-9a3c94643f9e",
+      "name": "02 - Get Full Candidate Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40c3c36a-b92f-49ef-a3d0-36462fc4aae0",
+              "leftValue": "={{ $json.application_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3488,
+        -192
+      ],
+      "id": "76566d70-f04e-4e4e-babf-b673af9bec8d",
+      "name": "12 - Application Exists?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb67ae9e-1af7-4396-a541-34d34649fbb0",
+              "name": "candidate_id",
+              "value": "={{ $json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f23198f7-590b-44ab-b7a8-5ad1066e7019",
+              "name": "job_title",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "d35d04b9-2c0c-44be-a5c1-32b250a4b076",
+              "name": "candidate_name",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.candidate_name }}",
+              "type": "string"
+            },
+            {
+              "id": "9a9a4636-50a0-4224-8603-8f35784bd30c",
+              "name": "candidate_email",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.candidate_email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3040,
+        -192
+      ],
+      "id": "45e8b931-a4af-456b-b436-27d89b85c62e",
+      "name": "11A - Prepare Application Lookup"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "312b4f56-877a-4a1a-b81a-6342779844a6",
+              "name": "application_id",
+              "value": "={{ 'APP-' + $execution.id + '-' + $itemIndex }}",
+              "type": "string"
+            },
+            {
+              "id": "dc6b0c54-ef34-40c5-beb8-1b27fbc60b17",
+              "name": "candidate_id",
+              "value": "={{ $('11A - Prepare Application Lookup').item.json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "78ee262c-4599-47bd-8141-ae007370c510",
+              "name": "job_title",
+              "value": "={{ $('11A - Prepare Application Lookup').item.json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "4ec35745-3ba5-4c73-aae0-b3e131761d02",
+              "name": "stage",
+              "value": "={{\n({\n  new_application: 'New Applicant',\n  interview_related: 'Interview Scheduled',\n  assessment_related: 'Assessment',\n  offer_related: 'Offer',\n  rejection: 'Rejected',\n  withdrawal: 'Withdrawn',\n  candidate_follow_up: 'Needs Review',\n  other_candidate_related: 'Needs Review'\n})[$('07 - Prepare Candidate Record').item.json.email_type] || 'Needs Review'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "715ad1d2-f82a-48d9-83f6-ceedaf1b2c93",
+              "name": "email_type",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.email_type }}",
+              "type": "string"
+            },
+            {
+              "id": "fe687b2a-179b-4c57-b399-cc822e40e89f",
+              "name": "notes",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3712,
+        -96
+      ],
+      "id": "11c99056-b417-4b83-bfcb-d2b3cc3091f6",
+      "name": "13 - Prepare New Application"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $json.application_id }}",
+            "candidate_id": "={{ $json.candidate_id }}",
+            "job_title": "={{ $json.job_title }}",
+            "stage": "={{ $json.stage }}",
+            "application_date": "={{ $now.toISO() }}",
+            "last_activity_date": "={{ $now.toISO() }}",
+            "source": "Email",
+            "needs_review": "false",
+            "notes": "={{ $json.notes }}",
+            "last_updated": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_date",
+              "displayName": "application_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_activity_date",
+              "displayName": "last_activity_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action_date",
+              "displayName": "next_action_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_email",
+              "displayName": "recruiter_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_application_id",
+              "displayName": "external_application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_review",
+              "displayName": "needs_review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3936,
+        -96
+      ],
+      "id": "dfc53b5f-d6d9-4fed-bf22-840f7a00769a",
+      "name": "14 - Create New Application"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de0f53c7-ddd6-49dd-89cd-b72aaaf118a5",
+              "name": "application_id",
+              "value": "={{ $json.application_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8d3f2ff2-754d-4985-8afb-93f6a9764167",
+              "name": "candidate_id",
+              "value": "={{ $json.candidate_id }}",
+              "type": "string"
+            },
+            {
+              "id": "25cecc01-a984-457c-8273-9002ea60f3de",
+              "name": "job_title",
+              "value": "={{ $json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "082dde26-ac1a-4e57-a621-ea7e8dbce19d",
+              "name": "current_stage",
+              "value": "={{ $json.stage }}",
+              "type": "string"
+            },
+            {
+              "id": "56d25936-31ae-4915-a41d-f7c2bf91acd0",
+              "name": "email_type",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.email_type }}",
+              "type": "string"
+            },
+            {
+              "id": "2e0d3d86-7afa-4920-8f79-9067f9db5c1f",
+              "name": "notes",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "f97b4f87-8c73-4360-8fb5-99943e814118",
+              "name": "new_stage",
+              "value": "={{\n({\n  new_application: $json.stage,\n  interview_related: 'Interview Scheduled',\n  assessment_related: 'Assessment',\n  offer_related: 'Offer',\n  rejection: 'Rejected',\n  withdrawal: 'Withdrawn',\n  candidate_follow_up: $json.stage,\n  other_candidate_related: $json.stage\n})[$('07 - Prepare Candidate Record').item.json.email_type] || $json.stage\n}}",
+              "type": "string"
+            },
+            {
+              "id": "2cd7bd6f-76e5-4cde-891f-aecc4f70eed1",
+              "name": "incoming_interview_date",
+              "value": "={{ $('07 - Prepare Candidate Record').item.json.interview_date }}",
+              "type": "string"
+            },
+            {
+              "id": "fad65db1-6f2e-41a3-84e6-f08f46493931",
+              "name": "new_interview_date",
+              "value": "={{   $('07 - Prepare Candidate Record').item.json.interview_date   || $json.interview_date   || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3712,
+        -288
+      ],
+      "id": "b3e66cc1-f11d-4ed3-9831-0f97248f5f2d",
+      "name": "15 - Prepare Application Update"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $json.application_id }}",
+            "stage": "={{ $json.new_stage }}",
+            "last_activity_date": "={{ $now.toISO() }}",
+            "interview_date": "={{ $json.new_interview_date }}",
+            "notes": "={{ $json.notes }}",
+            "last_updated": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "application_id"
+          ],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_date",
+              "displayName": "application_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_activity_date",
+              "displayName": "last_activity_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action_date",
+              "displayName": "next_action_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_name",
+              "displayName": "recruiter_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recruiter_email",
+              "displayName": "recruiter_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_application_id",
+              "displayName": "external_application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "needs_review",
+              "displayName": "needs_review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3936,
+        -288
+      ],
+      "id": "5cbdf939-a96a-4492-9765-4ed157631e51",
+      "name": "16 - Update Existing Application"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Email_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email_id": "={{ $('07 - Prepare Candidate Record').item.json.email_id }}",
+            "thread_id": "={{ $('07 - Prepare Candidate Record').item.json.thread_id }}",
+            "application_id": "={{ $json.application_id }}",
+            "candidate_id": "={{ $('11A - Prepare Application Lookup').item.json.candidate_id }}",
+            "email_type": "={{ $('07 - Prepare Candidate Record').item.json.email_type }}",
+            "subject": "={{ $('07 - Prepare Candidate Record').item.json.subject }}",
+            "processed_at": "={{ $now.toISO() }}",
+            "processing_result": "success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email_id",
+              "displayName": "email_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_id",
+              "displayName": "candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_type",
+              "displayName": "email_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processed_at",
+              "displayName": "processed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processing_result",
+              "displayName": "processing_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4160,
+        -192
+      ],
+      "id": "92afbc44-3f07-4b94-9549-3df1f847d9d3",
+      "name": "17 - Log Processed Email"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Email_Log",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email_id",
+              "lookupValue": "={{ $json.email_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        -192
+      ],
+      "id": "50f799ea-7826-4e29-b1e1-d5f56999c1b8",
+      "name": "03A - Find Processed Email",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d60cfd3d-d680-40bb-900f-42cf1e05d959",
+              "leftValue": "={{ $json.email_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "690d0589-8907-452b-862c-ac4790c85fe6",
+      "name": "03B - Email Already Processed?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7abb9d6c-d15c-432e-b617-e1c113d59a24",
+              "name": "email_id",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.email_id }}",
+              "type": "string"
+            },
+            {
+              "id": "418f46b6-66b0-48bb-8c44-b37efd22c309",
+              "name": "thread_id",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.thread_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8d676aa0-5eda-43f5-ad6c-d40e1c971943",
+              "name": "sender",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "44f34105-5854-4ee8-a350-f1f1e89ed7da",
+              "name": "recipient",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.recipient }}",
+              "type": "string"
+            },
+            {
+              "id": "6e9a4387-df54-4e4e-8b21-f87899c9e396",
+              "name": "subject",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "18a50f64-551a-44cb-8b9f-ebca74a4f3f8",
+              "name": "email_body",
+              "value": "={{ $('03 - Normalize Candidate Email').item.json.email_body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        -192
+      ],
+      "id": "4e5e46aa-4ba9-4b13-8765-07122086a569",
+      "name": "03C - Restore Normalized Email"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 - New Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "02 - Get Full Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Normalize Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "03A - Find Processed Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Check Recruitment Email": {
+      "main": [
+        [
+          {
+            "node": "05 - Interpret Recruitment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05A - AI Extraction Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "05 - Interpret Recruitment Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Interpret Recruitment Email": {
+      "main": [
+        [
+          {
+            "node": "06 - Route Candidate Pipeline Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Route Candidate Pipeline Email": {
+      "main": [
+        [
+          {
+            "node": "07 - Prepare Candidate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 - Prepare Candidate Record": {
+      "main": [
+        [
+          {
+            "node": "08 - Find Candidate by Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 - Find Candidate by Email": {
+      "main": [
+        [
+          {
+            "node": "09 - Candidate Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Candidate Exists?": {
+      "main": [
+        [
+          {
+            "node": "11A - Prepare Application Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10 - Create New Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Create New Candidate": {
+      "main": [
+        [
+          {
+            "node": "11A - Prepare Application Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Get Full Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "03 - Normalize Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Find Existing Application": {
+      "main": [
+        [
+          {
+            "node": "12 - Application Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11A - Prepare Application Lookup": {
+      "main": [
+        [
+          {
+            "node": "11 - Find Existing Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Application Exists?": {
+      "main": [
+        [
+          {
+            "node": "15 - Prepare Application Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13 - Prepare New Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Prepare New Application": {
+      "main": [
+        [
+          {
+            "node": "14 - Create New Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Prepare Application Update": {
+      "main": [
+        [
+          {
+            "node": "16 - Update Existing Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Update Existing Application": {
+      "main": [
+        [
+          {
+            "node": "17 - Log Processed Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03A - Find Processed Email": {
+      "main": [
+        [
+          {
+            "node": "03B - Email Already Processed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03B - Email Already Processed?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "03C - Restore Normalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Create New Application": {
+      "main": [
+        [
+          {
+            "node": "17 - Log Processed Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03C - Restore Normalized Email": {
+      "main": [
+        [
+          {
+            "node": "04 - Check Recruitment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": []
+}
